@@ -51,16 +51,8 @@ class DatabaseSeeder extends Seeder
             'dashboard.view',
         ]);
 
-        $admin = User::firstOrCreate([
-            'email' => 'admin@simpertanian.test',
-        ], [
-            'name' => 'Admin Dinas',
-            'phone' => '081234567890',
-            'address' => 'Kantor Dinas Pertanian',
-            'password' => Hash::make('Password@123'),
-            'is_active' => true,
-        ]);
-        $admin->syncRoles(['Admin']);
+        $this->call(AdminUserSeeder::class);
+        $admin = User::where('email', 'admin@gmail.com')->firstOrFail();
 
         $petugas = User::firstOrCreate([
             'email' => 'petugas@simpertanian.test',

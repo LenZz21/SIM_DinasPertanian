@@ -103,7 +103,7 @@ export default function BeritaPage() {
   );
 
   return (
-    <PublicShell>
+    <PublicShell navVariant="overlay">
       <main className="bg-white">
         <section
           className="relative flex min-h-[390px] items-center justify-center overflow-hidden bg-cover bg-center px-4 text-center text-white md:min-h-[470px]"
@@ -190,6 +190,7 @@ export default function BeritaPage() {
               <div className="mt-10 flex flex-wrap items-center justify-center gap-3 text-xs font-black uppercase tracking-[0.2em] text-[#2c2d32]">
                 <button
                   type="button"
+                  suppressHydrationWarning
                   disabled={page === 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
                   className="inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-40"
@@ -203,6 +204,7 @@ export default function BeritaPage() {
                     <button
                       key={pageNumber}
                       type="button"
+                      suppressHydrationWarning
                       onClick={() => setPage(pageNumber)}
                       className={`flex h-9 w-9 items-center justify-center rounded-md ${page === pageNumber ? "bg-[#ff432f] text-white" : "hover:bg-[#fff0ed]"}`}
                     >
@@ -212,12 +214,13 @@ export default function BeritaPage() {
                 })}
                 {totalPages > 5 ? <span>...</span> : null}
                 {totalPages > 5 ? (
-                  <button type="button" onClick={() => setPage(totalPages)} className="flex h-9 min-w-9 items-center justify-center rounded-md px-2 hover:bg-[#fff0ed]">
+                  <button type="button" suppressHydrationWarning onClick={() => setPage(totalPages)} className="flex h-9 min-w-9 items-center justify-center rounded-md px-2 hover:bg-[#fff0ed]">
                     {totalPages}
                   </button>
                 ) : null}
                 <button
                   type="button"
+                  suppressHydrationWarning
                   disabled={page === totalPages}
                   onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
                   className="inline-flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-40"

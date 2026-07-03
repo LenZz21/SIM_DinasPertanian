@@ -24,7 +24,7 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        $seed = random_int(1000, 99999);
+        $seed = (string) Str::uuid();
 
         return [
             'name' => 'User '.$seed,

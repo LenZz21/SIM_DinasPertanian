@@ -7,11 +7,13 @@ import type { NewsComment } from "@/lib/types/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 type NewsCommentsProps = {
   newsSlug: string;
   initialComments: NewsComment[];
   initialCount: number;
+  variant?: "default" | "dark";
 };
 
 function formatDate(value?: string | null) {
@@ -26,7 +28,7 @@ function formatDate(value?: string | null) {
   }).format(new Date(value));
 }
 
-export function NewsComments({ newsSlug, initialComments, initialCount }: NewsCommentsProps) {
+export function NewsComments({ newsSlug, initialComments, initialCount, variant = "default" }: NewsCommentsProps) {
   const [comments, setComments] = useState(initialComments);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,6 +37,7 @@ export function NewsComments({ newsSlug, initialComments, initialCount }: NewsCo
   const [message, setMessage] = useState<string | null>(null);
 
   const commentCount = useMemo(() => Math.max(initialCount, comments.length), [comments.length, initialCount]);
+  const isDark = variant === "dark";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -65,26 +68,39 @@ export function NewsComments({ newsSlug, initialComments, initialCount }: NewsCo
   }
 
   return (
-    <section className="space-y-5 rounded-xl border border-border bg-card p-6">
+    <section className={cn("space-y-5 rounded-xl border p-6", isDark ? "border-white/10 bg-[#202a35] text-slate-100" : "border-border bg-card")}>
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="font-[var(--font-sora)] text-xl font-bold">Komentar</h2>
-          <p className="text-sm text-muted-foreground">{commentCount} komentar untuk berita ini</p>
+          <p className={cn("text-sm", isDark ? "text-slate-400" : "text-muted-foreground")}>{commentCount} komentar untuk berita ini</p>
         </div>
-        <div className="rounded-full bg-primary/10 p-3 text-primary">
+        <div className={cn("rounded-full p-3", isDark ? "bg-[#ff432f]/10 text-[#ff6b5c]" : "bg-primary/10 text-primary")}>
           <MessageCircle className="h-5 w-5" />
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-3 rounded-lg border border-border bg-background p-4">
+      <form onSubmit={handleSubmit} className={cn("grid gap-3 rounded-lg border p-4", isDark ? "border-white/10 bg-[#18222d]" : "border-border bg-background")}>
         <div className="grid gap-3 md:grid-cols-2">
-          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nama" maxLength={120} />
-          <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email (opsional)" type="email" maxLength={190} />
+          <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nama" maxLength={120} className={cn(isDark ? "border-white/10 bg-[#111a24] text-slate-100 placeholder:text-slate-500" : "")} />
+          <Input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="Email (opsional)"
+            type="email"
+            maxLength={190}
+            className={cn(isDark ? "border-white/10 bg-[#111a24] text-slate-100 placeholder:text-slate-500" : "")}
+          />
         </div>
-        <Textarea value={content} onChange={(event) => setContent(event.target.value)} placeholder="Tulis komentar..." maxLength={1000} />
+        <Textarea
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          placeholder="Tulis komentar..."
+          maxLength={1000}
+          className={cn(isDark ? "border-white/10 bg-[#111a24] text-slate-100 placeholder:text-slate-500" : "")}
+        />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {message ? <p className="text-xs text-muted-foreground">{message}</p> : <span />}
-          <Button type="submit" disabled={isSubmitting} className="gap-2 self-start sm:self-auto">
+          {message ? <p className={cn("text-xs", isDark ? "text-slate-400" : "text-muted-foreground")}>{message}</p> : <span />}
+          <Button type="submit" disabled={isSubmitting} className={cn("gap-2 self-start sm:self-auto", isDark ? "bg-[#ff432f] hover:bg-[#e73322]" : "")}>
             <Send className="h-4 w-4" />
             {isSubmitting ? "Mengirim..." : "Kirim Komentar"}
           </Button>
@@ -94,16 +110,16 @@ export function NewsComments({ newsSlug, initialComments, initialCount }: NewsCo
       <div className="space-y-3">
         {comments.length > 0 ? (
           comments.map((comment) => (
-            <article key={comment.id} className="rounded-lg border border-border bg-background p-4">
+            <article key={comment.id} className={cn("rounded-lg border p-4", isDark ? "border-white/10 bg-[#18222d]" : "border-border bg-background")}>
               <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold">{comment.name}</h3>
-                <span className="text-xs text-muted-foreground">{formatDate(comment.created_at)}</span>
+                <span className={cn("text-xs", isDark ? "text-slate-500" : "text-muted-foreground")}>{formatDate(comment.created_at)}</span>
               </div>
-              <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">{comment.content}</p>
+              <p className={cn("whitespace-pre-wrap text-sm leading-6", isDark ? "text-slate-400" : "text-muted-foreground")}>{comment.content}</p>
             </article>
           ))
         ) : (
-          <div className="rounded-lg border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
+          <div className={cn("rounded-lg border border-dashed p-5 text-center text-sm", isDark ? "border-white/10 text-slate-400" : "border-border text-muted-foreground")}>
             Belum ada komentar. Jadilah yang pertama memberi tanggapan.
           </div>
         )}
