@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Leaf, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -47,7 +47,14 @@ export default function LoginPage() {
       const safePath = redirectTo && redirectTo.startsWith("/") ? redirectTo : "/admin";
       router.push(safePath);
     } catch (error: unknown) {
-      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      const response = (error as { response?: { data?: { message?: string }; status?: number }; code?: string })?.response;
+      const message = response?.data?.message;
+
+      if (!response) {
+        toast.error("Backend API tidak terhubung. Pastikan php artisan serve aktif di port 8000.");
+        return;
+      }
+
       toast.error(message ?? "Login gagal");
     }
   };
@@ -60,7 +67,7 @@ export default function LoginPage() {
           "linear-gradient(120deg,rgba(6,51,38,0.86),rgba(34,82,55,0.48),rgba(243,183,89,0.34)),url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1800&auto=format&fit=crop&q=85')",
       }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_35%),linear-gradient(to_bottom,transparent,rgba(5,34,24,0.42))]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent,rgba(5,34,24,0.42))]" />
 
       <Link href="/" className="absolute left-5 top-5 z-10 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm ring-1 ring-white/20 backdrop-blur transition hover:bg-white/25">
         <ArrowLeft className="h-4 w-4" />
@@ -70,8 +77,8 @@ export default function LoginPage() {
       <Card className="relative z-10 w-full max-w-md overflow-hidden border-white/70 bg-white/95 shadow-2xl backdrop-blur">
         <div className="h-1.5 bg-gradient-to-r from-emerald-700 via-lime-500 to-amber-400" />
         <CardHeader className="space-y-5 px-7 pb-3 pt-7 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 text-emerald-700 shadow-inner">
-            <Leaf className="h-10 w-10" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center">
+            <img src="/images/logo-sangihe.png" alt="Logo Kabupaten Kepulauan Sangihe" className="h-full w-full object-contain" />
           </div>
           <div>
             <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-emerald-700">
@@ -80,7 +87,7 @@ export default function LoginPage() {
             </p>
             <CardTitle className="font-[var(--font-sora)] text-3xl font-black text-[#17231d]">Login Admin</CardTitle>
             <p className="mt-2 text-sm leading-6 text-[#66766e]">
-              Masuk ke dashboard SIM Dinas Pertanian untuk mengelola data, berita, dan layanan.
+              Masuk ke dashboard Dinas Pertanian Kabupaten Kepulauan Sangihe untuk mengelola data, berita, dan layanan.
             </p>
           </div>
         </CardHeader>

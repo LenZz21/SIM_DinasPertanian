@@ -5,10 +5,10 @@ import {
   CheckCircle2,
   Clock3,
   Edit3,
+  Eye,
   ExternalLink,
   FileText,
   Loader2,
-  MessageCircle,
   Newspaper,
   Plus,
   Search,
@@ -32,9 +32,11 @@ import type { News } from "@/lib/types/api";
 
 const schema = z.object({
   title: z.string().min(5, "Judul minimal 5 karakter"),
+  category: z.string().min(2, "Kategori wajib diisi"),
   excerpt: z.string().optional(),
   content: z.string().min(20, "Konten minimal 20 karakter"),
   is_published: z.enum(["true", "false"]),
+  published_at: z.string().optional(),
   image: z.any().optional(),
 });
 
@@ -42,9 +44,11 @@ type FormValues = z.infer<typeof schema>;
 
 const defaultValues: FormValues = {
   title: "",
+  category: "Berita",
   excerpt: "",
   content: "",
   is_published: "true",
+  published_at: new Date().toISOString().slice(0, 10),
   image: undefined,
 };
 
@@ -58,13 +62,20 @@ function formatDate(value?: string | null) {
   }).format(new Date(value));
 }
 
+function toDateInputValue(value?: string | null) {
+  if (!value) return new Date().toISOString().slice(0, 10);
+  return new Date(value).toISOString().slice(0, 10);
+}
+
 function toFormData(values: FormValues) {
   const payload = new FormData();
   payload.append("title", values.title);
+  payload.append("category", values.category);
   payload.append("content", values.content);
   payload.append("is_published", values.is_published === "true" ? "1" : "0");
 
   if (values.excerpt) payload.append("excerpt", values.excerpt);
+  if (values.published_at) payload.append("published_at", values.published_at);
 
   const maybeFile = values.image?.[0] as File | undefined;
   if (maybeFile) payload.append("image", maybeFile);
@@ -92,7 +103,7 @@ export default function AdminBeritaPage() {
   const stats = useMemo(() => {
     const published = items.filter((item) => item.is_published).length;
     const drafts = items.length - published;
-    const comments = items.reduce((total, item) => total + (item.comments_count ?? 0), 0);
+    const views = items.reduce((total, item) => total + (item.views_count ?? 0), 0);
     const thisMonth = items.filter((item) => {
       const date = item.published_at ?? item.created_at;
       if (!date) return false;
@@ -106,7 +117,7 @@ export default function AdminBeritaPage() {
       { label: "Berita Dipublikasikan", value: `${published} Artikel`, icon: CheckCircle2, className: "bg-emerald-50 text-emerald-700" },
       { label: "Draft", value: `${drafts} Artikel`, icon: Clock3, className: "bg-amber-50 text-amber-700" },
       { label: "Artikel Bulan Ini", value: `${thisMonth} Artikel`, icon: FileText, className: "bg-blue-50 text-blue-700" },
-      { label: "Komentar Masuk", value: `${comments}`, icon: MessageCircle, className: "bg-rose-50 text-rose-700" },
+      { label: "Total Dilihat", value: `${views} Kali`, icon: Eye, className: "bg-teal-50 text-teal-700" },
     ];
   }, [items]);
 
@@ -151,9 +162,11 @@ export default function AdminBeritaPage() {
     setEditingItem(item);
     reset({
       title: item.title,
+      category: item.category ?? "Berita",
       excerpt: item.excerpt ?? "",
       content: item.content,
       is_published: item.is_published ? "true" : "false",
+      published_at: toDateInputValue(item.published_at ?? item.created_at),
       image: undefined,
     });
     setIsDialogOpen(true);
@@ -193,7 +206,7 @@ export default function AdminBeritaPage() {
             Manajemen Publikasi
           </div>
           <h1 className="font-[var(--font-sora)] text-[32px] font-bold leading-tight text-[#17231d]">Berita</h1>
-          <p className="text-sm text-[#66766e]">Kelola berita, pengumuman, status publikasi, dan komentar pembaca.</p>
+          <p className="text-sm text-[#66766e]">Kelola berita, pengumuman, kategori, tanggal, dan status publikasi.</p>
         </div>
         <Button onClick={openCreateDialog} className="gap-2">
           <Plus className="h-4 w-4" />
@@ -237,9 +250,10 @@ export default function AdminBeritaPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Judul</TableHead>
+                <TableHead>Kategori</TableHead>
                 <TableHead>Penulis</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Komentar</TableHead>
+                <TableHead>Dilihat</TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
@@ -247,7 +261,7 @@ export default function AdminBeritaPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                     <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" />
                     Memuat data berita...
                   </TableCell>
@@ -259,11 +273,14 @@ export default function AdminBeritaPage() {
                       <div className="font-semibold text-[#17231d]">{item.title}</div>
                       <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">{item.excerpt ?? item.content}</div>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{item.category ?? "Berita"}</Badge>
+                    </TableCell>
                     <TableCell>{item.author ?? "Admin Dinas"}</TableCell>
                     <TableCell>
                       <Badge variant={item.is_published ? "success" : "warning"}>{item.is_published ? "Published" : "Draft"}</Badge>
                     </TableCell>
-                    <TableCell>{item.comments_count ?? 0}</TableCell>
+                    <TableCell>{item.views_count ?? 0}</TableCell>
                     <TableCell>{formatDate(item.published_at ?? item.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
@@ -286,7 +303,7 @@ export default function AdminBeritaPage() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                     Belum ada berita yang cocok dengan pencarian.
                   </TableCell>
                 </TableRow>
@@ -307,6 +324,17 @@ export default function AdminBeritaPage() {
               <Label>Judul</Label>
               <Input {...register("title")} placeholder="Contoh: Program irigasi modern dimulai" />
               {errors.title ? <p className="text-xs text-rose-600">{errors.title.message}</p> : null}
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Kategori</Label>
+                <Input {...register("category")} placeholder="Contoh: Berita, Pengumuman, Program" />
+                {errors.category ? <p className="text-xs text-rose-600">{errors.category.message}</p> : null}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tanggal Publikasi</Label>
+                <Input type="date" {...register("published_at")} />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Ringkasan</Label>

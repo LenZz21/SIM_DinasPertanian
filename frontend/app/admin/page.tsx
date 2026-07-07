@@ -10,7 +10,6 @@ import {
   FaCalendarDays,
   FaCaretUp,
   FaChartLine,
-  FaChalkboardUser,
   FaCow,
   FaImages,
   FaJar,
@@ -35,7 +34,8 @@ import {
 import { toast } from "sonner";
 import { getDashboard } from "@/lib/api/dashboard";
 import { getNotifications } from "@/lib/api/notifications";
-import type { DashboardPayload, SystemNotification } from "@/lib/types/api";
+import { getPublicNews } from "@/lib/api/public";
+import type { DashboardPayload, News, SystemNotification } from "@/lib/types/api";
 
 const months = [
   { short: "Jan", label: "Januari", value: 0 },
@@ -119,9 +119,9 @@ const fallbackNotifications = [
   {
     icon: FaCalendarCheck,
     iconWrap: "bg-blue-50 text-blue-600",
-    title: "Jadwal penyuluhan baru Teknologi Tanam Padi Modern",
+    title: "Agenda baru Teknologi Tanam Padi Modern",
     time: "2 jam yang lalu",
-    href: "/admin/penyuluhan",
+    href: "/admin/agenda",
   },
   {
     icon: FaChartLine,
@@ -138,31 +138,12 @@ const quickMenus = [
   { href: "/admin/luas-lahan", title: "Luas Lahan", icon: FaMapLocationDot, iconClass: "bg-teal-100 text-teal-700" },
   { href: "/admin/data-ternak", title: "Data Ternak", icon: FaCow, iconClass: "bg-blue-100 text-blue-700" },
   { href: "/admin/data-pupuk", title: "Data Pupuk", icon: FaJar, iconClass: "bg-purple-100 text-purple-700" },
-  { href: "/admin/penyuluhan", title: "Penyuluhan", icon: FaChalkboardUser, iconClass: "bg-sky-100 text-sky-700" },
+  { href: "/admin/agenda", title: "Agenda", icon: FaCalendarDays, iconClass: "bg-sky-100 text-sky-700" },
   { href: "/admin/berita", title: "Berita", icon: FaNewspaper, iconClass: "bg-rose-100 text-rose-700" },
   { href: "/admin/galeri", title: "Galeri", icon: FaImages, iconClass: "bg-indigo-100 text-indigo-700" },
 ];
 
-const fallbackActivities = [
-  {
-    name: "Administrator",
-    action: "Menambahkan data petani baru: Bapak Joko Santoso",
-    time: "10 menit yang lalu",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60",
-  },
-  {
-    name: "Petugas Lapangan",
-    action: "Menginput hasil panen jagung 320 Kg",
-    time: "30 menit yang lalu",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60",
-  },
-  {
-    name: "Administrator",
-    action: "Mengupdate stok pupuk Urea 500 Kg",
-    time: "1 jam yang lalu",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60",
-  },
-];
+const announcementFallbackImage = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop&q=70";
 
 function formatCompactNumber(value: number) {
   return new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(value);
@@ -220,6 +201,40 @@ function notificationIcon(type: SystemNotification["type"]) {
   return { icon: FaCalendarCheck, iconWrap: "bg-blue-50 text-blue-600" };
 }
 
+function getInitials(name?: string | null) {
+  const words = (name ?? "Sistem").trim().split(/\s+/).filter(Boolean);
+  return words
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+}
+
+function getActivityHref(action?: string | null) {
+  const normalizedAction = (action ?? "").toLowerCase();
+
+  if (normalizedAction.includes("mitra") || normalizedAction.includes("petani")) return "/admin/mitra";
+  if (normalizedAction.includes("hasil") || normalizedAction.includes("panen")) return "/admin/hasil";
+  if (normalizedAction.includes("lahan")) return "/admin/luas-lahan";
+  if (normalizedAction.includes("ternak")) return "/admin/data-ternak";
+  if (normalizedAction.includes("pupuk") || normalizedAction.includes("stok")) return "/admin/data-pupuk";
+  if (normalizedAction.includes("agenda") || normalizedAction.includes("penyuluhan") || normalizedAction.includes("jadwal")) return "/admin/agenda";
+  if (normalizedAction.includes("berita") || normalizedAction.includes("publikasi")) return "/admin/berita";
+  if (normalizedAction.includes("galeri") || normalizedAction.includes("foto")) return "/admin/galeri";
+  if (normalizedAction.includes("user") || normalizedAction.includes("pengguna")) return "/admin/pengguna";
+
+  return "/admin/monitoring";
+}
+
+function stripHtml(value?: string | null) {
+  return (value ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getNewsSummary(news?: News | null) {
+  const text = stripHtml(news?.excerpt || news?.content);
+  if (!text) return "Belum ada ringkasan publikasi. Lengkapi konten berita agar pengumuman tampil informatif.";
+  return text.length > 118 ? `${text.slice(0, 118).trim()}...` : text;
+}
+
 export default function AdminDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -227,6 +242,7 @@ export default function AdminDashboardPage() {
   const [dateRange, setDateRange] = useState({ startMonth: 0, endMonth: 4 });
   const [dashboardData, setDashboardData] = useState<DashboardPayload | null>(null);
   const [dashboardNotifications, setDashboardNotifications] = useState<SystemNotification[]>([]);
+  const [latestAnnouncement, setLatestAnnouncement] = useState<News | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
 
   const dynamicProductionData = useMemo(() => {
@@ -327,16 +343,14 @@ export default function AdminDashboardPage() {
   const latestActivities = useMemo(() => {
     const apiActivities = dashboardData?.latest_activities ?? [];
 
-    if (!apiActivities.length) return fallbackActivities;
+    if (!apiActivities.length) return [];
 
-    return apiActivities.slice(0, 3).map((item, index) => ({
-      name: item.user,
-      action: item.description ?? item.action,
+    return apiActivities.slice(0, 3).map((item) => ({
+      name: item.user || "Sistem",
+      action: item.description || item.action || "Aktivitas sistem diperbarui",
       time: formatRelativeTime(item.created_at),
-      avatar:
-        index % 2 === 0
-          ? "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=60"
-          : "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=60",
+      href: getActivityHref(`${item.action} ${item.description}`),
+      initials: getInitials(item.user),
     }));
   }, [dashboardData]);
 
@@ -375,6 +389,13 @@ export default function AdminDashboardPage() {
 
       setDashboardData(dashboardResponse.data);
       setDashboardNotifications(notificationResponse.data.items);
+
+      try {
+        const newsResponse = await getPublicNews();
+        setLatestAnnouncement(newsResponse.data[0] ?? null);
+      } catch {
+        setLatestAnnouncement(null);
+      }
     } catch (error: unknown) {
       const status = (error as { response?: { status?: number; data?: { message?: string } } })?.response?.status;
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -689,44 +710,67 @@ export default function AdminDashboardPage() {
         <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-3">
           <div className="mb-4 flex items-center justify-between">
             <h4 className="font-bold text-slate-800">Aktivitas Terbaru</h4>
-            <Link href="/admin/notifikasi" className="text-xs font-semibold text-emerald-600 hover:underline">
+            <Link href="/admin/monitoring" className="text-xs font-semibold text-emerald-600 hover:underline">
               Lihat Semua
             </Link>
           </div>
           <div className="flex-1 space-y-3.5 overflow-y-auto">
-            {latestActivities.map((item) => (
-              <div key={item.action} className="flex items-start gap-2.5">
-                <Image src={item.avatar} width={28} height={28} className="mt-0.5 h-7 w-7 rounded-full object-cover" alt={item.name} />
-                <div className="min-w-0 flex-1 leading-tight">
-                  <p className="text-xs font-semibold text-slate-700">{item.name}</p>
-                  <p className="text-[11px] text-slate-500">{item.action}</p>
-                  <span className="mt-0.5 block text-[10px] text-slate-400">{item.time}</span>
-                </div>
+            {latestActivities.length ? (
+              latestActivities.map((item, index) => (
+                <Link key={`${item.name}-${item.action}-${item.time}-${index}`} href={item.href} className="flex items-start gap-2.5 rounded-lg p-1 transition hover:bg-slate-50">
+                  <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[11px] font-bold text-emerald-700">
+                    {item.initials}
+                  </div>
+                  <div className="min-w-0 flex-1 leading-tight">
+                    <p className="text-xs font-semibold text-slate-700">{item.name}</p>
+                    <p className="text-[11px] text-slate-500">{item.action}</p>
+                    <span className="mt-0.5 block text-[10px] text-slate-400">{item.time}</span>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="flex h-full min-h-32 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
+                <p className="text-xs text-slate-400">Belum ada aktivitas terbaru dari sistem.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-white p-5 shadow-sm lg:col-span-3">
           <h4 className="mb-3 font-bold text-slate-800">Informasi & Pengumuman</h4>
-          <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-slate-100">
-            <Image
-              src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&auto=format&fit=crop&q=60"
-              alt="Sawah"
-              width={400}
-              height={180}
-              className="h-24 w-full object-cover"
-            />
-            <div className="flex flex-1 flex-col justify-between gap-2 p-3">
-              <div>
-                <h5 className="font-bold leading-snug text-slate-800">Dukung Pertanian Maju, Petani Sejahtera</h5>
-                <p className="mt-1 text-[10px] text-slate-400">Mari bersama-sama meningkatkan produktivitas pertanian untuk ketahanan pangan daerah yang lebih baik.</p>
+          {latestAnnouncement ? (
+            <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-slate-100">
+              <Image
+                src={latestAnnouncement.image_url || announcementFallbackImage}
+                alt={latestAnnouncement.title}
+                width={400}
+                height={180}
+                className="h-24 w-full object-cover"
+              />
+              <div className="flex flex-1 flex-col justify-between gap-2 p-3">
+                <div>
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-rose-600">Publikasi</span>
+                    <span className="text-[10px] text-slate-400">{formatRelativeTime(latestAnnouncement.published_at ?? latestAnnouncement.created_at)}</span>
+                  </div>
+                  <h5 className="line-clamp-2 font-bold leading-snug text-slate-800">{latestAnnouncement.title}</h5>
+                  <p className="mt-1 line-clamp-2 text-[10px] text-slate-400">{getNewsSummary(latestAnnouncement)}</p>
+                </div>
+                <Link href={`/berita/${latestAnnouncement.slug}`} className="flex w-full items-center justify-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">
+                  Buka Berita <FaArrowRight className="text-[10px]" />
+                </Link>
               </div>
-              <Link href="/admin/berita" className="flex w-full items-center justify-center gap-1 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">
-                Selengkapnya <FaArrowRight className="text-[10px]" />
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50/60 p-5 text-center">
+              <FaNewspaper className="mb-2 h-6 w-6 text-slate-300" />
+              <p className="text-xs font-semibold text-slate-600">Belum ada pengumuman publik.</p>
+              <p className="mt-1 text-[10px] text-slate-400">Publikasikan berita agar informasi terbaru tampil di dashboard.</p>
+              <Link href="/admin/berita" className="mt-3 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-700">
+                Kelola Berita
               </Link>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

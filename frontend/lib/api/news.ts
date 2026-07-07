@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api/client";
+import { clearPublicApiCache } from "@/lib/api/public";
 import type { ApiResponse, News } from "@/lib/types/api";
 
 type NewsCollection = News[] | { data: News[] };
@@ -19,6 +20,7 @@ export async function createAdminNews(payload: FormData) {
   const { data } = await apiClient.post<ApiResponse<News>>("/news", payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  clearPublicApiCache();
   return data;
 }
 
@@ -28,10 +30,12 @@ export async function updateAdminNews(id: number, payload: FormData) {
   const { data } = await apiClient.post<ApiResponse<News>>(`/news/${id}`, payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  clearPublicApiCache();
   return data;
 }
 
 export async function deleteAdminNews(id: number) {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/news/${id}`);
+  clearPublicApiCache();
   return data;
 }

@@ -74,7 +74,7 @@ export function NewsComments({ newsSlug, initialComments, initialCount, variant 
           <h2 className="font-[var(--font-sora)] text-xl font-bold">Komentar</h2>
           <p className={cn("text-sm", isDark ? "text-slate-400" : "text-muted-foreground")}>{commentCount} komentar untuk berita ini</p>
         </div>
-        <div className={cn("rounded-full p-3", isDark ? "bg-[#ff432f]/10 text-[#ff6b5c]" : "bg-primary/10 text-primary")}>
+        <div className={cn("rounded-full p-3", isDark ? "bg-[#25576a]/10 text-[#25576a]" : "bg-primary/10 text-primary")}>
           <MessageCircle className="h-5 w-5" />
         </div>
       </div>
@@ -100,7 +100,7 @@ export function NewsComments({ newsSlug, initialComments, initialCount, variant 
         />
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {message ? <p className={cn("text-xs", isDark ? "text-slate-400" : "text-muted-foreground")}>{message}</p> : <span />}
-          <Button type="submit" disabled={isSubmitting} className={cn("gap-2 self-start sm:self-auto", isDark ? "bg-[#ff432f] hover:bg-[#e73322]" : "")}>
+          <Button type="submit" disabled={isSubmitting} className={cn("gap-2 self-start sm:self-auto", isDark ? "bg-[#0f7d3b] hover:bg-[#0b6b32]" : "")}>
             <Send className="h-4 w-4" />
             {isSubmitting ? "Mengirim..." : "Kirim Komentar"}
           </Button>

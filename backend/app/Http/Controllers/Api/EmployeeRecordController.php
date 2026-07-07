@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EmployeeRecordResource;
 use App\Models\EmployeeRecord;
 use App\Services\ActivityLogService;
+use App\Services\FileUploadService;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,10 @@ class EmployeeRecordController extends Controller
 {
     use ApiResponse;
 
-    public function __construct(private readonly ActivityLogService $activityLogService) {}
+    public function __construct(
+        private readonly ActivityLogService $activityLogService,
+        private readonly FileUploadService $fileUploadService
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -54,10 +58,14 @@ class EmployeeRecordController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $payload = $request->validate($this->rules());
+        $payload = $request->validate($this->rules(), $this->messages());
+        $photoPath = $this->fileUploadService->upload($request->file('photo'), 'employees');
+
+        unset($payload['photo']);
 
         $employeeRecord = EmployeeRecord::create([
             ...$payload,
+            'photo_path' => $photoPath,
             'created_by' => auth('api')->id(),
         ]);
 
@@ -73,9 +81,15 @@ class EmployeeRecordController extends Controller
 
     public function update(Request $request, EmployeeRecord $employeeRecord): JsonResponse
     {
-        $payload = $request->validate($this->rules());
+        $payload = $request->validate($this->rules(), $this->messages());
+        $photoPath = $this->fileUploadService->replace($request->file('photo'), $employeeRecord->photo_path, 'employees');
 
-        $employeeRecord->update($payload);
+        unset($payload['photo']);
+
+        $employeeRecord->update([
+            ...$payload,
+            'photo_path' => $photoPath,
+        ]);
 
         $this->activityLogService->log('employee.update', $employeeRecord, 'Memperbarui data pegawai.');
 
@@ -84,6 +98,8 @@ class EmployeeRecordController extends Controller
 
     public function destroy(EmployeeRecord $employeeRecord): JsonResponse
     {
+        $this->fileUploadService->delete($employeeRecord->photo_path);
+
         $employeeRecord->delete();
 
         $this->activityLogService->log('employee.delete', $employeeRecord, 'Menghapus data pegawai.');
@@ -104,8 +120,20 @@ class EmployeeRecordController extends Controller
             'status' => ['required', 'string', 'max:80'],
             'phone' => ['nullable', 'string', 'max:30'],
             'email' => ['nullable', 'email', 'max:190'],
+            'photo' => ['nullable', 'image', 'max:4096'],
             'joined_at' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function messages(): array
+    {
+        return [
+            'photo.image' => 'File foto harus berupa gambar JPG, PNG, atau format gambar lain yang valid.',
+            'photo.max' => 'Ukuran foto maksimal 4 MB.',
         ];
     }
 }

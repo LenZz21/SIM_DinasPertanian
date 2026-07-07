@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Leaf, Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,16 @@ const links = [
   { href: "/", label: "Beranda" },
   { href: "/informasi-pertanian", label: "Informasi Pertanian" },
   { href: "/berita", label: "Berita" },
-  { href: "/#layanan", label: "Layanan" },
+  { href: "/profil", label: "Profil Dinas" },
   { href: "/galeri", label: "Galeri" },
-  { href: "/kontak", label: "Kontak" },
+  { href: "/agenda", label: "Agenda" },
 ];
 
 export function PublicNavbar({ variant = "default" }: { variant?: "default" | "overlay" }) {
   const isOverlay = variant === "overlay";
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOverlay) return;
@@ -34,13 +34,7 @@ export function PublicNavbar({ variant = "default" }: { variant?: "default" | "o
   }, [isOverlay]);
 
   const useTransparentOverlay = isOverlay && !isScrolled;
-  const isSolid = !isOverlay || isScrolled;
-
-  function isActive(href: string) {
-    if (href === "/") return pathname === "/";
-    if (href.startsWith("/#")) return false;
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
+  const isActiveLink = (href: string) => (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`));
 
   return (
     <header
@@ -48,54 +42,52 @@ export function PublicNavbar({ variant = "default" }: { variant?: "default" | "o
         "z-40 transition-all duration-300",
         isOverlay
           ? "fixed inset-x-0 top-4 px-3 md:px-6"
-          : "sticky top-0 border-b border-emerald-900/10 bg-white/95 px-3 text-[#122018] shadow-sm backdrop-blur-xl md:px-6",
+          : "sticky top-0 border-b border-[#d9edf3] bg-white/85 text-[#122018] backdrop-blur-xl",
       )}
     >
       <div
         className={cn(
-          "public-navbar-reveal mx-auto w-full max-w-7xl transition-all duration-300",
-          isOverlay ? "rounded-2xl border" : "border-x border-transparent",
-          isOverlay && isScrolled ? "border-emerald-900/10 bg-white text-[#17231d] shadow-lg shadow-emerald-950/10" : "",
-          useTransparentOverlay ? "border-transparent bg-transparent text-white shadow-none" : "",
+          "public-navbar-reveal mx-auto h-20 w-full max-w-[calc(100vw-48px)] transition-all duration-300 md:max-w-[calc(100vw-96px)]",
+          isOverlay ? "h-20 rounded-2xl" : "",
+          isOverlay && isScrolled ? "bg-white text-[#17231d]" : "",
+          useTransparentOverlay ? "bg-transparent text-white shadow-none" : "",
         )}
       >
-        <div className="public-navbar-content flex h-[76px] items-center justify-between px-4 md:h-[84px] md:px-6">
-          <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setIsMobileOpen(false)}>
-            <div
-              className={cn(
-                "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors md:h-14 md:w-14",
-                isOverlay && isScrolled ? "bg-[#fff0ed] text-[#ff432f]" : "",
-                useTransparentOverlay ? "bg-transparent text-white" : "",
-                !isOverlay ? "bg-emerald-50 text-emerald-700" : "",
-              )}
-            >
-              <Leaf className="h-6 w-6" />
+        <div className="public-navbar-content mx-auto flex h-full w-full max-w-7xl items-center justify-between px-5 md:px-0">
+          <Link href="/" className="flex items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center">
+              <img src="/images/logo-sangihe.png" alt="Logo Kabupaten Kepulauan Sangihe" className="h-full w-full object-contain" />
             </div>
-            <div className="min-w-0">
-              <p className={cn("truncate font-[var(--font-sora)] text-base font-black leading-tight md:text-lg", useTransparentOverlay ? "text-white" : "text-[#122018]")}>
-                SIM Dinas Pertanian
+            <div>
+              <p className={cn("font-[var(--font-sora)] text-sm font-bold leading-tight md:text-base", useTransparentOverlay ? "text-white" : "text-[#122018]")}>
+                Dinas Pertanian
               </p>
-              <p className={cn("truncate text-[11px] leading-tight md:text-xs", useTransparentOverlay ? "text-white/75" : "text-[#66766e]")}>Smart Farming Platform</p>
+              <p className={cn("text-[10px] leading-tight md:text-[11px]", useTransparentOverlay ? "text-white/75" : "text-[#66766e]")}>
+                Kab. Kepulauan Sangihe
+              </p>
             </div>
           </Link>
-          <nav className="hidden items-center gap-1 rounded-full bg-transparent lg:flex">
+          <nav className="hidden items-center gap-8 md:flex">
             {links.map((item) => {
-              const active = isActive(item.href);
+              const isActive = isActiveLink(item.href);
+              const showUnderline = (hoveredHref === item.href) || (isActive && item.href !== "/" && !hoveredHref);
 
               return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-full px-4 py-2.5 text-sm font-bold transition md:text-base",
-                  useTransparentOverlay ? "text-white/85 hover:text-white" : "",
-                  isSolid ? "text-[#66766e] hover:bg-emerald-50 hover:text-emerald-700" : "",
-                  active && useTransparentOverlay ? "text-white" : "",
-                  active && isSolid ? "bg-emerald-50 text-emerald-700" : "",
-                )}
-              >
-                {item.label}
-              </Link>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onMouseEnter={() => setHoveredHref(item.href)}
+                  onMouseLeave={() => setHoveredHref(null)}
+                  className={cn(
+                    "relative pb-2 text-base font-semibold transition after:absolute after:bottom-0 after:left-0 after:h-1 after:w-full after:origin-left after:rounded-full after:bg-[#0f7d3b] after:transition-transform after:duration-300 hover:after:scale-x-100",
+                    showUnderline ? "after:scale-x-100" : "after:scale-x-0",
+                    useTransparentOverlay ? "text-white/85 hover:text-white" : "",
+                    isOverlay && isScrolled ? "text-[#66766e] hover:text-[#0f7d3b]" : "",
+                    !isOverlay ? "text-[#66766e] hover:text-[#0f7d3b]" : "",
+                  )}
+                >
+                  {item.label}
+                </Link>
               );
             })}
           </nav>
@@ -104,71 +96,30 @@ export function PublicNavbar({ variant = "default" }: { variant?: "default" | "o
               asChild
               size="sm"
               className={cn(
-                "hidden h-12 rounded-full px-7 text-base font-bold lg:inline-flex",
-                isSolid ? "bg-emerald-700 text-white hover:bg-emerald-800" : "",
-                useTransparentOverlay ? "bg-transparent text-white shadow-none hover:bg-white/10" : "",
+                "hidden h-11 rounded-full px-7 text-base md:inline-flex",
+                isOverlay && isScrolled ? "bg-[#0f7d3b] text-white hover:bg-[#0b6b32]" : "",
+                useTransparentOverlay ? "bg-white/15 text-white hover:bg-white/25" : "",
               )}
             >
               <Link href="/login">Login Admin</Link>
             </Button>
             <Button
-              type="button"
-              variant="ghost"
+              asChild
+              variant="outline"
               size="sm"
-              onClick={() => setIsMobileOpen((open) => !open)}
-              aria-expanded={isMobileOpen}
-              aria-label="Buka menu navigasi"
               className={cn(
-                "h-11 w-11 rounded-full p-0 lg:hidden",
-                isSolid ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "",
-                useTransparentOverlay ? "bg-transparent text-white hover:bg-white/10" : "",
+                "rounded-full px-3 md:hidden",
+                isOverlay && isScrolled ? "border-[#bfe8cc] bg-white text-[#0f7d3b] hover:bg-[#edf5f8]" : "",
+                useTransparentOverlay ? "border-white/30 bg-white/10 text-white hover:bg-white/20" : "",
+                !isOverlay ? "border-[#bde0e9]" : "",
               )}
             >
-              {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <Link href="/login" aria-label="Login Admin">
+                <Menu className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
         </div>
-
-        {isMobileOpen ? (
-          <div
-            className={cn(
-              "mx-3 mb-3 rounded-2xl border p-3 shadow-lg lg:hidden",
-              useTransparentOverlay ? "border-white/15 bg-black/25" : "border-emerald-900/10 bg-white",
-            )}
-          >
-            <nav className="grid gap-1">
-              {links.map((item) => {
-                const active = isActive(item.href);
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsMobileOpen(false)}
-                    className={cn(
-                      "rounded-xl px-4 py-3 text-sm font-bold transition",
-                      useTransparentOverlay ? "text-white/85 hover:bg-white/10 hover:text-white" : "text-[#66766e] hover:bg-emerald-50 hover:text-emerald-700",
-                      active && useTransparentOverlay ? "text-white" : "",
-                      active && !useTransparentOverlay ? "bg-emerald-50 text-emerald-700" : "",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-              <Link
-                href="/login"
-                onClick={() => setIsMobileOpen(false)}
-                className={cn(
-                  "mt-2 rounded-xl px-4 py-3 text-center text-sm font-black transition",
-                  useTransparentOverlay ? "bg-white/10 text-white hover:bg-white/20" : "bg-emerald-700 text-white hover:bg-emerald-800",
-                )}
-              >
-                Login Admin
-              </Link>
-            </nav>
-          </div>
-        ) : null}
       </div>
     </header>
   );

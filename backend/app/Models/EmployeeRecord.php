@@ -12,6 +12,7 @@ class EmployeeRecord extends Model
     use HasFactory;
 
     protected $fillable = [
+        'structure_key',
         'name',
         'position',
         'unit',
@@ -19,6 +20,7 @@ class EmployeeRecord extends Model
         'status',
         'phone',
         'email',
+        'photo_path',
         'joined_at',
         'notes',
         'created_by',

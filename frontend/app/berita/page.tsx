@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, ChevronLeft, ChevronRight, Eye, Newspaper, Search } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, Eye, ImageIcon, Newspaper, Search } from "lucide-react";
 import { PublicShell } from "@/components/layout/public-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,6 @@ import { Input } from "@/components/ui/input";
 import { getPublicNews } from "@/lib/api/public";
 import type { News } from "@/lib/types/api";
 
-const fallbackImages = [
-  "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=900&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=900&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=900&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=900&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1530267981375-f0de937f5f13?w=900&auto=format&fit=crop&q=80",
-];
-
-const categories = ["Semua", "Berita", "Pengumuman"];
 const pageSize = 5;
 
 function formatDate(value?: string | null) {
@@ -43,21 +34,29 @@ function formatShortDate(value?: string | null) {
   }).format(new Date(value));
 }
 
-function getNewsImage(item: News, index: number) {
-  return item.image_url || fallbackImages[index % fallbackImages.length];
-}
-
 function getSummary(item: News, length = 235) {
-  const plainText = (item.excerpt || item.content).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const plainText = (item.excerpt || item.content)
+    .replace(/<[^>]+>/g, "")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/__(.*?)__/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[*_~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   return plainText.length > length ? `${plainText.slice(0, length)}...` : plainText;
 }
 
 function getCategory(item: News) {
-  return item.title.toLowerCase().includes("pengumuman") ? "Pengumuman" : "Berita";
+  return item.category ?? "Berita";
 }
 
-function getViews(item: News, index: number) {
-  return (item.comments_count ?? 0) + 41 + index * 6;
+function getViews(item: News) {
+  return item.views_count ?? 0;
+}
+
+function getNewsTime(item: News) {
+  return new Date(item.updated_at ?? item.created_at ?? item.published_at ?? 0).getTime();
 }
 
 export default function BeritaPage() {
@@ -70,9 +69,9 @@ export default function BeritaPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(true);
-      getPublicNews(search)
+      getPublicNews(search ? { search, per_page: 50 } : { per_page: 50 }, { cache: false })
         .then((res) => {
-          setItems(res.data);
+          setItems([...res.data].sort((a, b) => getNewsTime(b) - getNewsTime(a)));
           setPage(1);
         })
         .catch(() => setItems([]))
@@ -91,6 +90,11 @@ export default function BeritaPage() {
     return items.filter((item) => getCategory(item) === selectedCategory);
   }, [items, selectedCategory]);
 
+  const categories = useMemo(() => {
+    const values = Array.from(new Set(items.map((item) => getCategory(item)).filter(Boolean)));
+    return ["Semua", ...values];
+  }, [items]);
+
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
   const visibleItems = useMemo(() => {
     const start = (page - 1) * pageSize;
@@ -98,7 +102,7 @@ export default function BeritaPage() {
   }, [filteredItems, page]);
 
   const popularItems = useMemo(
-    () => [...items].sort((a, b) => (b.comments_count ?? 0) - (a.comments_count ?? 0)).slice(0, 5),
+    () => [...items].sort((a, b) => getNewsTime(b) - getNewsTime(a)).slice(0, 5),
     [items],
   );
 
@@ -112,13 +116,12 @@ export default function BeritaPage() {
               "linear-gradient(180deg,rgba(5,19,38,0.36),rgba(5,19,38,0.62)),url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1800&auto=format&fit=crop&q=80')",
           }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),transparent_38%)]" />
           <div className="relative">
             <h1 className="font-[var(--font-sora)] text-4xl font-black md:text-6xl">Berita</h1>
             <p className="mt-4 text-sm font-medium text-white/85 md:text-base">Informasi Cepat, Aktual, dan Inspiratif</p>
             <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur">
-              <Newspaper className="h-4 w-4 text-[#ff432f]" />
-              <span className="text-[#ff6b5c]">Berita</span>
+              <Newspaper className="h-4 w-4 text-[#25576a]" />
+              <span className="text-[#0f7d3b]">Berita</span>
             </div>
           </div>
         </section>
@@ -133,7 +136,7 @@ export default function BeritaPage() {
               <div className="space-y-6">
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, index) => (
-                    <div key={index} className="grid min-h-[330px] overflow-hidden rounded-xl bg-[#f7f0ef] md:grid-cols-[300px_1fr]">
+                    <div key={index} className="grid min-h-[330px] overflow-hidden rounded-xl bg-[#edf5f8] md:grid-cols-[300px_1fr]">
                       <div className="h-80 animate-pulse bg-slate-200 md:h-auto" />
                       <div className="space-y-4 p-6">
                         <div className="h-6 w-4/5 animate-pulse rounded bg-slate-200" />
@@ -145,19 +148,24 @@ export default function BeritaPage() {
                     </div>
                   ))
                 ) : visibleItems.length ? (
-                  visibleItems.map((item, index) => {
-                    const absoluteIndex = (page - 1) * pageSize + index;
-
+                  visibleItems.map((item) => {
                     return (
-                      <article key={item.id} className="grid min-h-[330px] overflow-hidden rounded-xl bg-[#f7f0ef] shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg md:grid-cols-[300px_1fr]">
+                      <article key={item.id} data-news-no-hover className="grid min-h-[330px] overflow-hidden rounded-xl bg-[#edf5f8] shadow-sm md:grid-cols-[300px_1fr]">
                         <Link href={`/berita/${item.slug}`} className="block">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={getNewsImage(item, absoluteIndex)} alt={item.title} className="h-80 w-full object-cover md:h-full" />
+                          {item.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.image_url} alt={item.title} className="h-80 w-full object-cover md:h-full" />
+                          ) : (
+                            <div className="flex h-80 w-full flex-col items-center justify-center bg-[#d9edf3] text-[#25576a] md:h-full">
+                              <ImageIcon className="h-10 w-10" />
+                              <p className="mt-2 text-xs font-semibold">Gambar belum tersedia</p>
+                            </div>
+                          )}
                         </Link>
                         <div className="flex min-h-[330px] flex-col justify-between p-8">
                           <div>
                             <Link href={`/berita/${item.slug}`}>
-                              <h2 className="font-[var(--font-sora)] text-2xl font-bold leading-snug text-[#2c2d32] transition hover:text-[#ff432f]">
+                              <h2 className="font-[var(--font-sora)] text-2xl font-bold leading-snug text-[#2c2d32]">
                                 {item.title}
                               </h2>
                             </Link>
@@ -168,9 +176,9 @@ export default function BeritaPage() {
                             <span>{formatDate(item.published_at ?? item.created_at)}</span>
                             <span className="inline-flex items-center gap-1">
                               <Eye className="h-3.5 w-3.5" />
-                              {getViews(item, absoluteIndex)} kali dilihat
+                              {getViews(item)} kali dilihat
                             </span>
-                            <Badge variant="outline" className="border-[#ffd4ce] bg-white text-[#ff432f]">
+                            <Badge variant="outline" className="border-[#bfe8cc] bg-white text-[#0f7d3b]">
                               {getCategory(item)}
                             </Badge>
                           </div>
@@ -179,8 +187,8 @@ export default function BeritaPage() {
                     );
                   })
                 ) : (
-                  <div className="flex min-h-[360px] flex-col items-center justify-center rounded-xl bg-[#f7f0ef] text-center">
-                    <Newspaper className="mb-4 h-12 w-12 text-[#ff432f]" />
+                  <div className="flex min-h-[360px] flex-col items-center justify-center rounded-xl bg-[#edf5f8] text-center">
+                    <Newspaper className="mb-4 h-12 w-12 text-[#25576a]" />
                     <h2 className="font-[var(--font-sora)] text-2xl font-bold text-[#17231d]">Tidak ada berita ditemukan</h2>
                     <p className="mt-2 text-sm text-[#66766e]">Silakan gunakan kata kunci atau kategori lain.</p>
                   </div>
@@ -206,7 +214,7 @@ export default function BeritaPage() {
                       type="button"
                       suppressHydrationWarning
                       onClick={() => setPage(pageNumber)}
-                      className={`flex h-9 w-9 items-center justify-center rounded-md ${page === pageNumber ? "bg-[#ff432f] text-white" : "hover:bg-[#fff0ed]"}`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-md ${page === pageNumber ? "bg-[#0f7d3b] text-white" : "hover:bg-[#edf5f8]"}`}
                     >
                       {pageNumber}
                     </button>
@@ -214,7 +222,7 @@ export default function BeritaPage() {
                 })}
                 {totalPages > 5 ? <span>...</span> : null}
                 {totalPages > 5 ? (
-                  <button type="button" suppressHydrationWarning onClick={() => setPage(totalPages)} className="flex h-9 min-w-9 items-center justify-center rounded-md px-2 hover:bg-[#fff0ed]">
+                  <button type="button" suppressHydrationWarning onClick={() => setPage(totalPages)} className="flex h-9 min-w-9 items-center justify-center rounded-md px-2 hover:bg-[#edf5f8]">
                     {totalPages}
                   </button>
                 ) : null}
@@ -235,7 +243,7 @@ export default function BeritaPage() {
               <div>
                 <h2 className="font-[var(--font-sora)] text-xl font-bold text-[#2c2d32]">
                   Pencarian{" "}
-                  <span className="text-[24px] font-light text-[#ff432f]" style={{ fontFamily: "var(--font-kalam)" }}>
+                  <span className="text-[24px] font-light text-[#25576a]" style={{ fontFamily: "var(--font-kalam)" }}>
                     Berita
                   </span>
                 </h2>
@@ -253,7 +261,7 @@ export default function BeritaPage() {
               <div>
                 <h2 className="font-[var(--font-sora)] text-xl font-bold text-[#2c2d32]">
                   Semua{" "}
-                  <span className="text-[24px] font-light text-[#ff432f]" style={{ fontFamily: "var(--font-kalam)" }}>
+                  <span className="text-[24px] font-light text-[#25576a]" style={{ fontFamily: "var(--font-kalam)" }}>
                     Kategori
                   </span>
                 </h2>
@@ -266,8 +274,8 @@ export default function BeritaPage() {
                       onClick={() => setSelectedCategory(category)}
                       className={
                         selectedCategory === category
-                          ? "h-9 rounded-md bg-[#ff432f] px-4 text-xs hover:bg-[#e73322]"
-                          : "h-9 rounded-md border-slate-200 bg-white px-4 text-xs text-[#2c2d32] hover:bg-[#fff0ed]"
+                          ? "h-9 rounded-md bg-[#0f7d3b] px-4 text-xs hover:bg-[#0b6b32]"
+                          : "h-9 rounded-md border-slate-200 bg-white px-4 text-xs text-[#2c2d32] hover:bg-[#edf5f8]"
                       }
                     >
                       {category}
@@ -279,22 +287,28 @@ export default function BeritaPage() {
               <div>
                 <h2 className="font-[var(--font-sora)] text-xl font-bold text-[#2c2d32]">
                   Berita{" "}
-                  <span className="text-[24px] font-light text-[#ff432f]" style={{ fontFamily: "var(--font-kalam)" }}>
+                  <span className="text-[24px] font-light text-[#25576a]" style={{ fontFamily: "var(--font-kalam)" }}>
                     Populer
                   </span>
                 </h2>
                 <div className="mt-5 space-y-5">
-                  {(popularItems.length ? popularItems : items.slice(0, 5)).map((item, index) => (
-                    <Link key={item.id} href={`/berita/${item.slug}`} className="group grid grid-cols-[120px_1fr] gap-5">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={getNewsImage(item, index)} alt={item.title} className="h-24 w-full rounded-md object-cover" />
+                  {(popularItems.length ? popularItems : items.slice(0, 5)).map((item) => (
+                    <Link key={item.id} href={`/berita/${item.slug}`} className="grid grid-cols-[120px_1fr] gap-5">
+                      {item.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.image_url} alt={item.title} className="h-24 w-full rounded-md object-cover" />
+                      ) : (
+                        <div className="flex h-24 w-full items-center justify-center rounded-md bg-[#d9edf3] text-[#25576a]">
+                          <ImageIcon className="h-5 w-5" />
+                        </div>
+                      )}
                       <div className="min-w-0">
-                        <p className="line-clamp-2 text-sm font-semibold leading-5 text-[#2c2d32] transition group-hover:text-[#ff432f]">{item.title}</p>
+                        <p className="line-clamp-2 text-sm font-semibold leading-5 text-[#2c2d32]">{item.title}</p>
                         <p className="mt-2 flex items-center gap-2 text-xs text-[#74747a]">
                           <CalendarDays className="h-3.5 w-3.5" />
                           {formatShortDate(item.published_at ?? item.created_at)}
                           <Eye className="ml-1 h-3.5 w-3.5" />
-                          {getViews(item, index)}
+                          {getViews(item)}
                         </p>
                       </div>
                     </Link>

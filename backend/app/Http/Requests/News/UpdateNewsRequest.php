@@ -24,10 +24,12 @@ class UpdateNewsRequest extends FormRequest
     {
         return [
             'title' => ['sometimes', 'required', 'string', 'max:190'],
+            'category' => ['nullable', 'string', 'max:100'],
             'excerpt' => ['nullable', 'string'],
             'content' => ['sometimes', 'required', 'string'],
             'image' => ['nullable', 'image', 'max:2048'],
             'is_published' => ['nullable', 'boolean'],
+            'published_at' => ['nullable', 'date'],
         ];
     }
 }

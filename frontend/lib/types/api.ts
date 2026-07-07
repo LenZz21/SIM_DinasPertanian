@@ -55,13 +55,16 @@ export type News = {
   id: number;
   title: string;
   slug: string;
+  category: string;
   excerpt?: string | null;
   content: string;
   image_url?: string | null;
   is_published: boolean;
+  views_count?: number;
   published_at?: string | null;
   author?: string | null;
   created_at?: string | null;
+  updated_at?: string | null;
   comments?: NewsComment[];
   comments_count?: number;
 };
@@ -75,14 +78,69 @@ export type NewsComment = {
   created_at?: string | null;
 };
 
+export type OfficialGreeting = {
+  id: number;
+  name: string;
+  position: string;
+  institution: string;
+  photo_url?: string | null;
+  detail_url: string;
+  paragraphs: string[];
+  is_active: boolean;
+  updated_at?: string | null;
+};
+
+export type DepartmentProfile = {
+  id: number;
+  overview: string;
+  vision: string;
+  missions: string[];
+  main_duty?: string | null;
+  functions?: string[];
+  hero_image_url?: string | null;
+  hero_image_urls?: Array<string | null>;
+  active_hero_image_index?: number | null;
+  is_active: boolean;
+  updated_at?: string | null;
+};
+
 export type GalleryItem = {
   id: number;
+  album_id?: number | null;
   title: string;
   description?: string | null;
   category: string;
   image_url?: string | null;
   taken_at?: string | null;
   uploaded_by?: string | null;
+  created_at?: string | null;
+};
+
+export type GalleryAlbum = {
+  id: number;
+  title: string;
+  description?: string | null;
+  category: string;
+  cover_url?: string | null;
+  photos_count: number;
+  photos: GalleryItem[];
+  taken_at?: string | null;
+  uploaded_by?: string | null;
+  created_at?: string | null;
+};
+
+export type AgendaEvent = {
+  id: number;
+  slug: string;
+  title: string;
+  summary?: string | null;
+  location: string;
+  starts_at: string;
+  ends_at?: string | null;
+  category: string;
+  image_url?: string | null;
+  status: "Terjadwal" | "Berlangsung" | "Selesai" | "Dibatalkan";
+  created_by?: string | null;
   created_at?: string | null;
 };
 
@@ -130,23 +188,9 @@ export type LandArea = {
   created_at?: string | null;
 };
 
-export type ExtensionSession = {
-  id: number;
-  scheduled_at: string;
-  topic: string;
-  location: string;
-  instructor?: string | null;
-  registered_participants: number;
-  attended_participants: number;
-  materials_count: number;
-  status: "Terjadwal" | "Berlangsung" | "Selesai" | "Dibatalkan";
-  notes?: string | null;
-  created_by?: string | null;
-  created_at?: string | null;
-};
-
 export type EmployeeRecord = {
   id: number;
+  structure_key?: string | null;
   name: string;
   position: string;
   unit: string;
@@ -154,6 +198,7 @@ export type EmployeeRecord = {
   status: "Aktif" | "Cuti" | "Nonaktif";
   phone?: string | null;
   email?: string | null;
+  photo_url?: string | null;
   joined_at?: string | null;
   notes?: string | null;
   created_by?: string | null;

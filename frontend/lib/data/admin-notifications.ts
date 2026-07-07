@@ -23,10 +23,10 @@ export const DEFAULT_ADMIN_NOTIFICATIONS: AdminNotification[] = [
   },
   {
     id: "notif-3",
-    title: "Jadwal penyuluhan baru Teknologi Tanam Padi Modern",
+    title: "Agenda baru Teknologi Tanam Padi Modern",
     time: "2 jam yang lalu",
-    type: "Penyuluhan",
-    href: "/admin/penyuluhan",
+    type: "Agenda",
+    href: "/admin/agenda",
   },
   {
     id: "notif-4",

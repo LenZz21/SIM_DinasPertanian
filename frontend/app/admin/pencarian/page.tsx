@@ -9,7 +9,7 @@ const SEARCH_INDEX = [
   { href: "/admin/luas-lahan", title: "Luas Lahan", keywords: ["lahan", "wilayah", "area"] },
   { href: "/admin/data-ternak", title: "Data Ternak", keywords: ["ternak", "sapi", "hewan"] },
   { href: "/admin/data-pupuk", title: "Data Pupuk", keywords: ["pupuk", "urea", "stok"] },
-  { href: "/admin/penyuluhan", title: "Penyuluhan", keywords: ["penyuluhan", "jadwal"] },
+  { href: "/admin/agenda", title: "Agenda", keywords: ["agenda", "jadwal", "kegiatan"] },
   { href: "/admin/laporan", title: "Laporan & Export", keywords: ["laporan", "excel", "pdf", "export"] },
   { href: "/admin/monitoring", title: "Monitoring Produksi", keywords: ["monitoring", "grafik", "chart"] },
   { href: "/admin/notifikasi", title: "Notifikasi", keywords: ["notifikasi", "alert"] },

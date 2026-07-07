@@ -1,8 +1,9 @@
 import { apiClient } from "@/lib/api/client";
+import { clearPublicApiCache } from "@/lib/api/public";
 import type { ApiResponse, EmployeeRecord } from "@/lib/types/api";
 
 type EmployeeCollection = EmployeeRecord[] | { data: EmployeeRecord[] };
-export type EmployeePayload = Omit<EmployeeRecord, "id" | "created_by" | "created_at">;
+export type EmployeePayload = FormData;
 
 function normalizeEmployeeResponse(response: ApiResponse<EmployeeCollection>) {
   return {
@@ -17,16 +18,25 @@ export async function getEmployees(params?: { search?: string; category?: string
 }
 
 export async function createEmployee(payload: EmployeePayload) {
-  const { data } = await apiClient.post<ApiResponse<EmployeeRecord>>("/employees", payload);
+  const { data } = await apiClient.post<ApiResponse<EmployeeRecord>>("/employees", payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  clearPublicApiCache();
   return data;
 }
 
 export async function updateEmployee(id: number, payload: EmployeePayload) {
-  const { data } = await apiClient.put<ApiResponse<EmployeeRecord>>(`/employees/${id}`, payload);
+  payload.append("_method", "PUT");
+
+  const { data } = await apiClient.post<ApiResponse<EmployeeRecord>>(`/employees/${id}`, payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  clearPublicApiCache();
   return data;
 }
 
 export async function deleteEmployee(id: number) {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/employees/${id}`);
+  clearPublicApiCache();
   return data;
 }

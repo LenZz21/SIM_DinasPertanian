@@ -13,6 +13,7 @@ class GalleryItem extends Model
 
     protected $fillable = [
         'title',
+        'album_id',
         'description',
         'category',
         'image_path',
@@ -30,5 +31,10 @@ class GalleryItem extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function album(): BelongsTo
+    {
+        return $this->belongsTo(GalleryAlbum::class, 'album_id');
     }
 }

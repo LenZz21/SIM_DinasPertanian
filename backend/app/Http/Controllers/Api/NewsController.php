@@ -52,11 +52,12 @@ class NewsController extends Controller
         $news = News::create([
             'title' => $payload['title'],
             'slug' => Str::slug($payload['title']).'-'.Str::random(6),
+            'category' => $payload['category'] ?? 'Berita',
             'excerpt' => $payload['excerpt'] ?? null,
             'content' => $payload['content'],
             'image_path' => $imagePath,
             'is_published' => $payload['is_published'] ?? false,
-            'published_at' => ($payload['is_published'] ?? false) ? now() : null,
+            'published_at' => ($payload['is_published'] ?? false) ? ($payload['published_at'] ?? now()) : null,
             'author_id' => auth('api')->id(),
         ]);
 
@@ -78,11 +79,12 @@ class NewsController extends Controller
         $berita->update([
             'title' => $payload['title'] ?? $berita->title,
             'slug' => isset($payload['title']) ? Str::slug($payload['title']).'-'.Str::random(6) : $berita->slug,
+            'category' => $payload['category'] ?? $berita->category,
             'excerpt' => $payload['excerpt'] ?? $berita->excerpt,
             'content' => $payload['content'] ?? $berita->content,
             'image_path' => $imagePath,
             'is_published' => $payload['is_published'] ?? $berita->is_published,
-            'published_at' => ($payload['is_published'] ?? $berita->is_published) ? ($berita->published_at ?? now()) : null,
+            'published_at' => ($payload['is_published'] ?? $berita->is_published) ? ($payload['published_at'] ?? $berita->published_at ?? now()) : null,
         ]);
 
         $this->activityLogService->log('news.update', $berita, 'Memperbarui berita pertanian.');

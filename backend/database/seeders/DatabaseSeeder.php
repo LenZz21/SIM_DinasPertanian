@@ -52,6 +52,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(AdminUserSeeder::class);
+        $this->call(OrganizationEmployeeSeeder::class);
+        $this->call(SangiheVisionMissionSeeder::class);
         $admin = User::where('email', 'admin@gmail.com')->firstOrFail();
 
         $petugas = User::firstOrCreate([

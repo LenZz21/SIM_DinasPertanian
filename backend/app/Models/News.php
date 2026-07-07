@@ -15,10 +15,12 @@ class News extends Model
     protected $fillable = [
         'title',
         'slug',
+        'category',
         'excerpt',
         'content',
         'image_path',
         'is_published',
+        'views_count',
         'published_at',
         'author_id',
     ];

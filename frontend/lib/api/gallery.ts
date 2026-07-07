@@ -1,7 +1,8 @@
 import { apiClient } from "@/lib/api/client";
-import type { ApiResponse, GalleryItem } from "@/lib/types/api";
+import { clearPublicApiCache } from "@/lib/api/public";
+import type { ApiResponse, GalleryAlbum } from "@/lib/types/api";
 
-type GalleryCollection = GalleryItem[] | { data: GalleryItem[] };
+type GalleryCollection = GalleryAlbum[] | { data: GalleryAlbum[] };
 
 function normalizeGalleryResponse(response: ApiResponse<GalleryCollection>) {
   return {
@@ -16,22 +17,39 @@ export async function getGalleryItems(params?: { search?: string; category?: str
 }
 
 export async function createGalleryItem(payload: FormData) {
-  const { data } = await apiClient.post<ApiResponse<GalleryItem>>("/gallery", payload, {
+  const { data } = await apiClient.post<ApiResponse<GalleryAlbum>>("/gallery", payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  clearPublicApiCache();
   return data;
 }
 
 export async function updateGalleryItem(id: number, payload: FormData) {
   payload.append("_method", "PUT");
 
-  const { data } = await apiClient.post<ApiResponse<GalleryItem>>(`/gallery/${id}`, payload, {
+  const { data } = await apiClient.post<ApiResponse<GalleryAlbum>>(`/gallery/${id}`, payload, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  clearPublicApiCache();
   return data;
 }
 
 export async function deleteGalleryItem(id: number) {
   const { data } = await apiClient.delete<ApiResponse<null>>(`/gallery/${id}`);
+  clearPublicApiCache();
+  return data;
+}
+
+export async function addGalleryPhotos(id: number, payload: FormData) {
+  const { data } = await apiClient.post<ApiResponse<GalleryAlbum>>(`/gallery/${id}/photos`, payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  clearPublicApiCache();
+  return data;
+}
+
+export async function deleteGalleryPhoto(id: number) {
+  const { data } = await apiClient.delete<ApiResponse<null>>(`/gallery/photos/${id}`);
+  clearPublicApiCache();
   return data;
 }

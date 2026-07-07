@@ -70,7 +70,7 @@ function ExportButtons() {
         <button
           key={type}
           type="button"
-          className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 transition hover:border-[#ff432f] hover:text-[#ff432f]"
+          className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500 transition hover:border-[#0f7d3b] hover:text-[#0f7d3b]"
         >
           {type}
         </button>
@@ -81,12 +81,12 @@ function ExportButtons() {
 
 function InfographicPanel({ title, description, children, compact = false }: { title: string; description?: string; children: ReactNode; compact?: boolean }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-sm">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <h2 className="font-[var(--font-sora)] text-base font-black text-[#25332c]">{title}</h2>
           {description ? <p className="mt-2 max-w-xl text-xs leading-5 text-slate-500">{description}</p> : null}
-          <div className="mt-3 h-1 w-10 rounded-full bg-[#f5b21b]" />
+          <div className="mt-3 h-1 w-10 rounded-full bg-[#9fd0dc]" />
         </div>
         <ExportButtons />
       </div>
@@ -132,16 +132,16 @@ export default function InformasiPertanianPage() {
 
   const statCards = [
     { label: "Total Produksi", value: formatNumber(stats.total_panen || 64490), unit: "Ton", icon: Wheat, color: "text-blue-600" },
-    { label: "Mitra Petani", value: formatNumber(stats.total_mitra || 12840), unit: "Orang", icon: Users, color: "text-emerald-600" },
-    { label: "Komoditas", value: "5", unit: "Jenis", icon: Sprout, color: "text-amber-600" },
+    { label: "Mitra Petani", value: formatNumber(stats.total_mitra || 12840), unit: "Orang", icon: Users, color: "text-[#25576a]" },
+    { label: "Komoditas", value: "5", unit: "Jenis", icon: Sprout, color: "text-[#25576a]" },
     { label: "Puncak Produksi", value: formatNumber(topProduction), unit: "Ton", icon: BarChart3, color: "text-violet-600" },
     { label: "Wilayah Pantau", value: "5", unit: "Daerah", icon: MapPinned, color: "text-rose-600" },
   ];
 
   const keyInsights = [
-    { title: "Komoditas Dominan", value: "Padi 35%", icon: Leaf, tone: "bg-emerald-50 text-emerald-700" },
+    { title: "Komoditas Dominan", value: "Padi 35%", icon: Leaf, tone: "bg-[#eaf7ef] text-[#0f7d3b]" },
     { title: "Wilayah Tertinggi", value: "Jeneponto", icon: MapPinned, tone: "bg-blue-50 text-blue-700" },
-    { title: "Stok Prioritas", value: "Urea 3.520 Kg", icon: Sprout, tone: "bg-amber-50 text-amber-700" },
+    { title: "Stok Prioritas", value: "Urea 3.520 Kg", icon: Sprout, tone: "bg-[#eaf7ef] text-[#0f7d3b]" },
     { title: "Laporan Valid", value: "128 Dokumen", icon: FileDown, tone: "bg-rose-50 text-rose-700" },
   ];
 
@@ -155,13 +155,12 @@ export default function InformasiPertanianPage() {
               "linear-gradient(180deg,rgba(5,19,38,0.36),rgba(5,19,38,0.62)),url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1800&auto=format&fit=crop&q=80')",
           }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1),transparent_38%)]" />
           <div className="relative">
             <h1 className="font-[var(--font-sora)] text-4xl font-black md:text-6xl">Infografis Pertanian</h1>
             <p className="mt-4 text-sm font-medium text-white/85 md:text-base">Statistik produksi, komoditas, dan layanan pertanian yang terintegrasi dan transparan.</p>
             <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur">
-              <BarChart3 className="h-4 w-4 text-[#ff432f]" />
-              <span className="text-[#ff6b5c]">Infografis</span>
+              <BarChart3 className="h-4 w-4 text-[#25576a]" />
+              <span className="text-[#0f7d3b]">Infografis</span>
             </div>
           </div>
         </section>
@@ -169,12 +168,12 @@ export default function InformasiPertanianPage() {
         <section className="relative -mt-10 rounded-t-[2.5rem] bg-[#eef4f8] px-4 pb-14 pt-8 md:px-6">
           <div className="mx-auto max-w-7xl">
             <div className="mb-8 text-center">
-              <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-[#ff432f]">Ringkasan Data Utama</p>
+              <p className="mb-2 text-xs font-black uppercase tracking-[0.22em] text-[#25576a]">Ringkasan Data Utama</p>
               <h2 className="font-[var(--font-sora)] text-2xl font-black text-[#25332c]">Statistik Umum</h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-500">
                 Data yang ditampilkan difokuskan pada produksi, mitra, komoditas, wilayah pantau, stok pupuk, dan aktivitas penyuluhan.
               </p>
-              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-[#f5b21b]" />
+              <div className="mx-auto mt-3 h-1 w-14 rounded-full bg-[#9fd0dc]" />
             </div>
 
             <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -182,10 +181,10 @@ export default function InformasiPertanianPage() {
                 const Icon = item.icon;
 
                 return (
-                  <div key={item.label} className="group rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-[#ffb3aa] hover:shadow-lg">
+                  <div key={item.label} className="group rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-[#9fd0dc] hover:shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                       <span className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{item.label}</span>
-                      <span className="rounded-2xl bg-slate-50 p-2 transition group-hover:bg-[#fff2ef]">
+                      <span className="rounded-2xl bg-slate-50 p-2 transition group-hover:bg-[#edf5f8]">
                         <Icon className={`h-5 w-5 ${item.color}`} />
                       </span>
                     </div>
@@ -290,7 +289,7 @@ export default function InformasiPertanianPage() {
                         <span>{formatNumber(item.total)} Kg</span>
                       </div>
                       <div className="h-3 rounded-full bg-slate-100">
-                        <div className="h-3 rounded-full bg-[#f5b21b]" style={{ width: `${Math.min(100, (item.total / 3600) * 100)}%` }} />
+                        <div className="h-3 rounded-full bg-[#9fd0dc]" style={{ width: `${Math.min(100, (item.total / 3600) * 100)}%` }} />
                       </div>
                     </div>
                   ))}
@@ -305,7 +304,7 @@ export default function InformasiPertanianPage() {
                       <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: "#8a9aa8", fontSize: 12 }} />
                       <YAxis tickLine={false} axisLine={false} tick={{ fill: "#8a9aa8", fontSize: 12 }} />
                       <Tooltip formatter={(value) => [`${value} Sesi`, "Penyuluhan"]} />
-                      <Bar dataKey="sesi" radius={[10, 10, 0, 0]} fill="#ff432f" />
+                      <Bar dataKey="sesi" radius={[10, 10, 0, 0]} fill="#0f7d3b" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (

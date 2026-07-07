@@ -22,9 +22,9 @@ return new class extends Migration
             ],
             [
                 'type' => 'info',
-                'title' => 'Jadwal penyuluhan baru Teknologi Tanam Padi Modern',
-                'message' => 'Jadwal penyuluhan baru sudah masuk ke agenda dinas.',
-                'meta' => json_encode(['href' => '/admin/penyuluhan', 'category' => 'Penyuluhan']),
+                'title' => 'Agenda baru Teknologi Tanam Padi Modern',
+                'message' => 'Agenda baru sudah masuk ke agenda dinas.',
+                'meta' => json_encode(['href' => '/admin/agenda', 'category' => 'Agenda']),
             ],
             [
                 'type' => 'error',
@@ -63,7 +63,7 @@ return new class extends Migration
             ->whereIn('title', [
                 'Data hasil panen padi berhasil ditambahkan',
                 'Stok pupuk Urea menipis sisa 150 Kg di Gudang Tahuna',
-                'Jadwal penyuluhan baru Teknologi Tanam Padi Modern',
+                'Agenda baru Teknologi Tanam Padi Modern',
                 'Hasil panen menurun -12% dibanding bulan lalu',
                 'Permintaan verifikasi mitra petani baru',
             ])
