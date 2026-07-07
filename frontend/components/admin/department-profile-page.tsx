@@ -255,7 +255,7 @@ export function DepartmentProfilePage() {
                     })}
                   </div>
                   <p className="text-xs leading-5 text-[#66766e]">
-                    Upload gambar JPG/PNG maksimal 4 MB per slot, lalu pilih wallpaper yang aktif untuk halaman beranda.
+                    Upload gambar JPG/PNG maksimal 4 MB per slot. Wallpaper aktif tampil pertama, lalu semua wallpaper yang terisi berganti otomatis di beranda.
                   </p>
                 </div>
 

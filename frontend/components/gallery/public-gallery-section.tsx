@@ -30,7 +30,7 @@ export function PublicGallerySection() {
 
     getPublicGalleryItems({ per_page: 60 })
       .then((response) => setItems(response.data))
-      .catch(() => setItems([]))
+      .catch(() => undefined)
       .finally(() => setIsLoading(false));
   }, []);
 

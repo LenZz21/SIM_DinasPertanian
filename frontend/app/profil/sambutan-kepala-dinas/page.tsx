@@ -56,7 +56,7 @@ export default function SambutanKepalaDinasPage() {
           setGreeting(response.data);
         }
       })
-      .catch(() => setGreeting(fallbackGreeting));
+      .catch(() => undefined);
 
     getPublicDepartmentProfile()
       .then((response) => {
@@ -64,7 +64,7 @@ export default function SambutanKepalaDinasPage() {
           setDepartmentProfile(response.data);
         }
       })
-      .catch(() => setDepartmentProfile(fallbackDepartmentProfile));
+      .catch(() => undefined);
   }, []);
 
   const photoUrl = greeting.photo_url || fallbackGreetingPhoto;

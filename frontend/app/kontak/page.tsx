@@ -53,7 +53,7 @@ export default function AgendaPublikPage() {
   useEffect(() => {
     getPublicAgenda({ per_page: 50 })
       .then((response) => setItems(response.data))
-      .catch(() => setItems([]))
+      .catch(() => undefined)
       .finally(() => setIsLoading(false));
   }, []);
 

@@ -80,6 +80,34 @@ function OrganizationCard({ node, highlight = false }: { node: OrganizationNode;
   );
 }
 
+function CommandCard({ node, highlight = false, compact = false }: { node: OrganizationNode; highlight?: boolean; compact?: boolean }) {
+  const title = node.employee?.position ?? node.title;
+  const name = node.employee?.name && node.employee.name !== node.title ? node.employee.name : null;
+  const nip = node.employee?.notes;
+  const photoUrl = node.employee?.photo_url;
+
+  return (
+    <div
+      className={`relative z-10 overflow-hidden border-2 border-[#17231d] bg-white text-center text-[#17231d] shadow-sm ${highlight ? "shadow-md" : ""}`}
+    >
+      <div className="border-b border-[#17231d] px-3 py-2">
+        <p className={`font-[var(--font-sora)] font-black uppercase leading-snug ${compact ? "text-[11px]" : "text-xs"}`}>{title}</p>
+      </div>
+      <div className="flex min-h-[48px] items-center justify-center gap-2 px-2 py-2">
+        {photoUrl ? (
+          <div className="h-11 w-11 shrink-0 overflow-hidden border border-[#17231d]/40 bg-[#eef7f2]">
+            <img src={photoUrl} alt={name ?? title} className="h-full w-full object-cover" />
+          </div>
+        ) : null}
+        <div className="min-w-0">
+          {name ? <h3 className={`font-[var(--font-sora)] font-black leading-tight ${compact ? "text-[12px]" : "text-sm"}`}>{name}</h3> : null}
+          {nip ? <p className={`mt-1 font-semibold leading-tight text-[#66766e] ${compact ? "text-[10px]" : "text-[11px]"}`}>{nip}</p> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilDinasPage() {
   const [profile, setProfile] = useState<DepartmentProfile>(fallbackDepartmentProfile);
   const [employees, setEmployees] = useState<EmployeeRecord[]>([]);
@@ -96,13 +124,13 @@ export default function ProfilDinasPage() {
           });
         }
       })
-      .catch(() => setProfile(fallbackDepartmentProfile));
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
     getPublicEmployees({ per_page: 100 })
       .then((response) => setEmployees(response.data ?? []))
-      .catch(() => setEmployees([]));
+      .catch(() => undefined);
   }, []);
 
   const missions = profile.missions?.length ? profile.missions : fallbackDepartmentProfile.missions;
@@ -361,62 +389,104 @@ export default function ProfilDinasPage() {
               <div className="mt-10 rounded-3xl border border-[#dce9e2] bg-white p-5 shadow-sm md:p-8">
                 {employees.length ? (
                   <>
-                    <div className="mx-auto max-w-sm">
-                      <OrganizationCard node={organizationChart.head} highlight />
-                    </div>
+                    <div className="lg:hidden">
+                      <div className="mx-auto max-w-sm">
+                        <OrganizationCard node={organizationChart.head} highlight />
+                      </div>
 
-                    <div className="mx-auto h-8 w-px bg-[#a9d7b8]" />
+                      <div className="mx-auto h-8 w-px bg-[#a9d7b8]" />
 
-                    <div className="mx-auto max-w-sm">
-                      <OrganizationCard node={organizationChart.secretary} />
-                    </div>
+                      <div className="mx-auto max-w-sm">
+                        <OrganizationCard node={organizationChart.secretary} />
+                      </div>
 
-                    <div className="mx-auto h-8 w-px bg-[#a9d7b8]" />
+                      <div className="mx-auto h-8 w-px bg-[#a9d7b8]" />
 
-                    <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
-                      {organizationChart.secretariat.map((node) => (
-                        <OrganizationCard key={node.title} node={node} />
-                      ))}
-                    </div>
+                      <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
+                        {organizationChart.secretariat.map((node) => (
+                          <OrganizationCard key={node.title} node={node} />
+                        ))}
+                      </div>
 
-                    <div className="mx-auto mt-2 h-10 w-px bg-[#a9d7b8]" />
+                      <div className="mx-auto mt-2 h-10 w-px bg-[#a9d7b8]" />
 
-                    <div className="relative">
-                      <div className="absolute left-[12.5%] right-[12.5%] top-0 hidden h-px bg-[#a9d7b8] lg:block" />
-                      <div className="grid gap-5 pt-8 md:grid-cols-2 xl:grid-cols-4">
+                      <div className="grid gap-5 pt-8 md:grid-cols-2">
                         {organizationChart.divisions.map((division) => (
-                          <div key={division.title} className="relative">
-                            <div className="absolute -top-8 left-1/2 hidden h-8 w-px bg-[#a9d7b8] lg:block" />
+                          <div key={division.title}>
                             <OrganizationCard node={division} />
                             <div className="mt-3 space-y-3">
                               {division.staff.map((node, index) => (
-                                <div key={`${division.title}-${node.title}-${node.employee?.id ?? index}`} className="rounded-xl border border-[#e3eee7] bg-[#f7fbf8] p-3">
-                                  <div className="flex gap-3">
-                                    {node.employee?.photo_url ? (
-                                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#eef7f2]">
-                                        <img src={node.employee.photo_url} alt={node.employee.name} className="h-full w-full object-cover" />
-                                      </div>
-                                    ) : null}
-                                    <div className="min-w-0">
-                                      <p className="text-xs font-black uppercase tracking-[0.1em] text-[#0f7d3b]">{node.employee?.position ?? node.title}</p>
-                                      {node.employee?.name && node.employee.name !== node.title ? (
-                                        <p className="mt-2 text-sm font-bold leading-snug text-[#17231d]">{node.employee.name}</p>
-                                      ) : null}
-                                      {node.employee?.notes ? <p className="mt-1 text-[11px] font-semibold text-[#66766e]">{node.employee.notes}</p> : null}
-                                    </div>
-                                  </div>
-                                </div>
+                                <OrganizationCard key={`${division.title}-${node.title}-${node.employee?.id ?? index}`} node={node} />
                               ))}
                             </div>
                           </div>
                         ))}
                       </div>
+
+                      <div className="mx-auto mt-6 h-8 w-px bg-[#a9d7b8]" />
+
+                      <div className="mx-auto max-w-sm">
+                        <OrganizationCard node={organizationChart.upt} />
+                      </div>
                     </div>
 
-                    <div className="mx-auto mt-6 h-8 w-px bg-[#a9d7b8]" />
+                    <div className="hidden overflow-x-auto lg:block">
+                      <div className="relative mx-auto h-[1190px] min-w-[1280px] max-w-[1340px] bg-white">
+                        <div className="absolute top-[182px] h-[850px] w-0.5 bg-[#17231d]" style={{ left: "50%" }} />
+                        <div className="absolute top-[260px] h-0.5 bg-[#17231d]" style={{ left: "50%", right: "29%" }} />
+                        <div className="absolute top-[580px] h-0.5 bg-[#17231d]" style={{ left: "7%", right: "7%" }} />
+                        <div className="absolute top-[260px] h-3 w-3 rotate-45 border-r-2 border-t-2 border-[#17231d]" style={{ left: "70.3%" }} />
 
-                    <div className="mx-auto max-w-sm">
-                      <OrganizationCard node={organizationChart.upt} />
+                        <div className="absolute top-[288px] h-[82px] w-0.5 bg-[#17231d]" style={{ left: "72%" }} />
+                        <div className="absolute top-[370px] h-0.5 bg-[#17231d]" style={{ left: "55%", right: "5%" }} />
+                        {[55, 85].map((left) => (
+                          <div key={`secretariat-line-${left}`} className="absolute top-[370px] h-9 w-0.5 bg-[#17231d]" style={{ left: `${left}%` }} />
+                        ))}
+
+                        {[14, 34, 54, 74].map((left) => (
+                          <div key={`division-line-${left}`} className="absolute top-[580px] h-11 w-0.5 bg-[#17231d]" style={{ left: `${left}%` }} />
+                        ))}
+
+                        <div className="absolute top-[1032px] h-11 w-0.5 bg-[#17231d]" style={{ left: "50%" }} />
+
+                        <div className="absolute top-[86px] w-[360px] -translate-x-1/2" style={{ left: "50%" }}>
+                          <CommandCard node={organizationChart.head} highlight />
+                        </div>
+
+                        <div className="absolute top-[226px] w-[300px] -translate-x-1/2" style={{ left: "72%" }}>
+                          <CommandCard node={organizationChart.secretary} />
+                        </div>
+
+                        {organizationChart.secretariat.map((node, index) => (
+                          <div key={`secretariat-${node.title}`} className="absolute top-[399px] w-[300px] -translate-x-1/2" style={{ left: index === 0 ? "55%" : "85%" }}>
+                            <CommandCard node={node} compact />
+                          </div>
+                        ))}
+
+                        <div className="absolute top-[631px] grid w-full grid-cols-4 gap-5 px-8">
+                          {organizationChart.divisions.map((division) => (
+                            <div key={division.title} className="relative">
+                              <CommandCard node={division} compact />
+
+                              {division.staff.length ? (
+                                <div className="relative mt-6 space-y-4 pl-5">
+                                  <div className="absolute bottom-0 left-2 top-0 w-0.5 bg-[#17231d]" />
+                                  {division.staff.map((node, index) => (
+                                    <div key={`${division.title}-${node.title}-${node.employee?.id ?? index}`} className="relative">
+                                      <div className="absolute left-[-12px] top-1/2 h-0.5 w-3 bg-[#17231d]" />
+                                      <CommandCard node={node} compact />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="absolute top-[1073px] w-[260px] -translate-x-1/2" style={{ left: "50%" }}>
+                          <CommandCard node={organizationChart.upt} compact />
+                        </div>
+                      </div>
                     </div>
                   </>
                 ) : (

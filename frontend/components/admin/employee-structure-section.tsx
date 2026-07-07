@@ -18,6 +18,7 @@ import type { EmployeeRecord } from "@/lib/types/api";
 const schema = z.object({
   position: z.string().min(2, "Nama bidang atau jabatan minimal 2 karakter"),
   name: z.string().min(2, "Nama orang minimal 2 karakter"),
+  nip: z.string().optional(),
   photo: z.any().optional(),
 });
 
@@ -26,6 +27,7 @@ type FormValues = z.infer<typeof schema>;
 const defaultValues: FormValues = {
   position: "",
   name: "",
+  nip: "",
   photo: undefined,
 };
 
@@ -39,7 +41,7 @@ function toPayload(values: FormValues, currentItem: EmployeeRecord): EmployeePay
   payload.append("phone", currentItem.phone || "");
   payload.append("email", currentItem.email || "");
   payload.append("joined_at", currentItem.joined_at ?? "");
-  payload.append("notes", currentItem.notes ?? "");
+  payload.append("notes", values.nip ?? "");
 
   const photoFile = values.photo?.[0] as File | undefined;
 
@@ -112,6 +114,7 @@ export function EmployeeStructureSection() {
     reset({
       name: item.name,
       position: item.position,
+      nip: item.notes ?? "",
       photo: undefined,
     });
     setIsDialogOpen(true);
@@ -227,7 +230,7 @@ export function EmployeeStructureSection() {
         <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Edit Struktur Organisasi</DialogTitle>
-            <DialogDescription>Ubah nama bidang atau jabatan, nama orang, dan foto yang tampil pada halaman publik.</DialogDescription>
+            <DialogDescription>Ubah nama bidang atau jabatan, nama orang, NIP, dan foto yang tampil pada halaman publik.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
             <div className="grid gap-4 rounded-2xl border border-[#dce9e2] bg-[#f7fbf8] p-4 sm:grid-cols-[112px_1fr] sm:items-center">
@@ -258,6 +261,10 @@ export function EmployeeStructureSection() {
               <Label>Nama Orang</Label>
               <Input {...register("name")} placeholder="Contoh: FRANKY NANTINGKASEH, S.Pi" />
               {errors.name ? <p className="text-xs text-rose-600">{errors.name.message}</p> : null}
+            </div>
+            <div className="space-y-1.5">
+              <Label>NIP</Label>
+              <Input {...register("nip")} placeholder="Contoh: NIP. 19751104 200212 1 004" />
             </div>
             <Button type="submit" disabled={isSubmitting} className="gap-2">
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UsersRound className="h-4 w-4" />}

@@ -69,12 +69,12 @@ export default function BeritaPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(true);
-      getPublicNews(search ? { search, per_page: 50 } : { per_page: 50 }, { cache: false })
+      getPublicNews(search ? { search, per_page: 50 } : { per_page: 50 })
         .then((res) => {
           setItems([...res.data].sort((a, b) => getNewsTime(b) - getNewsTime(a)));
           setPage(1);
         })
-        .catch(() => setItems([]))
+        .catch(() => undefined)
         .finally(() => setIsLoading(false));
     }, 300);
 

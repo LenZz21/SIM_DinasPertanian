@@ -262,6 +262,27 @@ body {
   }
 }
 
+@keyframes home-hero-mist-swallow {
+  0% {
+    opacity: 0;
+    transform: translate3d(-6%, 10%, 0) scale(1.02);
+  }
+
+  24% {
+    opacity: 0.64;
+  }
+
+  52% {
+    opacity: 0.5;
+    transform: translate3d(2%, 0, 0) scale(1.07);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(8%, -8%, 0) scale(1.12);
+  }
+}
+
 [data-home-page] .home-hero-kicker {
   animation: home-hero-kicker-in 900ms cubic-bezier(0.22, 1, 0.36, 1) 220ms both;
   will-change: opacity, transform;
@@ -313,6 +334,23 @@ body {
   overflow: hidden;
 }
 
+[data-home-page] .home-hero-slide {
+  backface-visibility: hidden;
+  transform-origin: center;
+  will-change: opacity, transform, filter;
+}
+
+[data-home-page] .home-hero-transition-mist {
+  animation: home-hero-mist-swallow 5600ms cubic-bezier(0.45, 0, 0.15, 1) both;
+  background:
+    radial-gradient(circle at 22% 78%, rgba(237, 245, 248, 0.7), transparent 34%),
+    radial-gradient(circle at 76% 70%, rgba(237, 245, 248, 0.45), transparent 30%),
+    linear-gradient(180deg, transparent 36%, rgba(237, 245, 248, 0.6) 86%, rgba(237, 245, 248, 0.88));
+  filter: blur(18px);
+  mix-blend-mode: screen;
+  will-change: opacity, transform;
+}
+
 [data-home-page] article:not([data-news-no-hover]),
 [data-home-page] .home-hover-lift {
   transition:
@@ -348,12 +386,12 @@ body {
 }
 
 [data-home-page] img,
-[data-home-page] [style*="background-image"] {
+[data-home-page] [style*="background-image"]:not(.home-hero-slide) {
   transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-home-page] article:not([data-news-no-hover]):hover img,
-[data-home-page] article:not([data-news-no-hover]):hover [style*="background-image"],
+[data-home-page] article:not([data-news-no-hover]):hover [style*="background-image"]:not(.home-hero-slide),
 [data-home-page] .home-hover-lift:hover img {
   transform: scale(1.035);
 }
@@ -381,6 +419,8 @@ body {
   [data-home-page] .home-hero-title-accent,
   [data-home-page] .home-hero-title-accent::before,
   [data-home-page] .home-hero-title-accent::after,
+  [data-home-page] .home-hero-slide,
+  [data-home-page] .home-hero-transition-mist,
   [data-home-page] .home-hero-fog,
   [data-home-page] .home-hero-fog::before,
   [data-home-page] .home-hero-subtitle,
@@ -394,6 +434,10 @@ body {
     animation: none;
     transition: none;
     transform: none;
+  }
+
+  [data-home-page] .home-hero-transition-mist {
+    display: none;
   }
 
   [data-home-page] .home-reveal {

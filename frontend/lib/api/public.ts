@@ -7,8 +7,8 @@ type PublicStats = {
   monthly: Array<{ month: number; total: number }>;
 };
 
-const PUBLIC_API_CACHE_PREFIX = "sim_pertanian_public_api:";
-const PUBLIC_API_CACHE_TTL_MS = 60 * 1000;
+const PUBLIC_API_CACHE_PREFIX = "sim_pertanian_public_api:v2:";
+const PUBLIC_API_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type PublicCacheEntry<T> = {
   expiresAt: number;
@@ -54,6 +54,10 @@ function writePublicCache<T>(key: string, value: T) {
     return;
   }
 
+  if (isEmptyPublicCollection(value)) {
+    return;
+  }
+
   try {
     storage.setItem(
       key,
@@ -65,6 +69,25 @@ function writePublicCache<T>(key: string, value: T) {
   } catch {
     clearPublicApiCache();
   }
+}
+
+function isEmptyPublicCollection(value: unknown) {
+  if (!value || typeof value !== "object" || !("data" in value)) {
+    return false;
+  }
+
+  const data = (value as { data?: unknown }).data;
+
+  if (Array.isArray(data)) {
+    return data.length === 0;
+  }
+
+  if (data && typeof data === "object" && "data" in data) {
+    const nestedData = (data as { data?: unknown }).data;
+    return Array.isArray(nestedData) && nestedData.length === 0;
+  }
+
+  return false;
 }
 
 async function cachedPublicGet<T>(key: string, request: () => Promise<T>) {

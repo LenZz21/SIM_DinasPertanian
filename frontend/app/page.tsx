@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -88,6 +88,8 @@ const fallbackDepartmentProfile: DepartmentProfile = {
     "Mengembangkan inovasi, teknologi, dan kemitraan untuk mendukung ketahanan pangan serta kesejahteraan petani.",
   ],
   hero_image_url: null,
+  hero_image_urls: [null, null, null],
+  active_hero_image_index: 1,
   is_active: true,
   updated_at: null,
 };
@@ -238,9 +240,10 @@ export default function HomePage() {
   const [agendaItems, setAgendaItems] = useState<AgendaCardItem[]>([]);
   const [galleryItems, setGalleryItems] = useState<HomeGalleryItem[]>([]);
   const [organizationItems, setOrganizationItems] = useState<HomeOrganizationItem[]>([]);
+  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
 
   const loadHomeNews = useCallback(async () => {
-    const response = await getPublicNews({ per_page: 12 }, { cache: false });
+    const response = await getPublicNews({ per_page: 12 });
     return response.data
       .filter((item) => item.is_published)
       .sort((first, second) => getNewsTime(second) - getNewsTime(first))
@@ -255,41 +258,31 @@ export default function HomePage() {
       .then((response) => {
         if (isMounted && response.data) setGreeting(response.data);
       })
-      .catch(() => {
-        if (isMounted) setGreeting(fallbackGreeting);
-      });
+      .catch(() => undefined);
 
     getPublicDepartmentProfile()
       .then((response) => {
         if (isMounted && response.data) setDepartmentProfile(response.data);
       })
-      .catch(() => {
-        if (isMounted) setDepartmentProfile(fallbackDepartmentProfile);
-      });
+      .catch(() => undefined);
 
     getPublicAgenda({ per_page: 5 })
       .then((response) => {
         if (isMounted) setAgendaItems(response.data.map(toAgendaCardItem));
       })
-      .catch(() => {
-        if (isMounted) setAgendaItems([]);
-      });
+      .catch(() => undefined);
 
     getPublicGalleryItems({ per_page: 8 })
       .then((response) => {
         if (isMounted) setGalleryItems(response.data.map(toHomeGalleryItem));
       })
-      .catch(() => {
-        if (isMounted) setGalleryItems([]);
-      });
+      .catch(() => undefined);
 
     loadHomeNews()
       .then((items) => {
         if (isMounted) setNewsItems(items);
       })
-      .catch(() => {
-        if (isMounted) setNewsItems([]);
-      });
+      .catch(() => undefined);
 
     getPublicEmployees({ per_page: 30 })
       .then((response) => {
@@ -302,37 +295,10 @@ export default function HomePage() {
             .map(toHomeOrganizationItem),
         );
       })
-      .catch(() => {
-        if (isMounted) setOrganizationItems([]);
-      });
+      .catch(() => undefined);
 
     return () => {
       isMounted = false;
-    };
-  }, [loadHomeNews]);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const refreshNews = () => {
-      if (document.visibilityState !== "visible") return;
-
-      loadHomeNews()
-        .then((items) => {
-          if (isMounted) setNewsItems(items);
-        })
-        .catch(() => {
-          if (isMounted) setNewsItems([]);
-        });
-    };
-
-    window.addEventListener("focus", refreshNews);
-    document.addEventListener("visibilitychange", refreshNews);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener("focus", refreshNews);
-      document.removeEventListener("visibilitychange", refreshNews);
     };
   }, [loadHomeNews]);
 
@@ -370,9 +336,53 @@ export default function HomePage() {
     return () => observer.disconnect();
   }, [agendaItems.length, galleryItems.length, newsItems.length, organizationItems.length]);
 
+  const heroImageCandidates = useMemo(() => {
+    const urls = (departmentProfile.hero_image_urls ?? []).filter((url): url is string => Boolean(url));
+
+    if (!urls.length && departmentProfile.hero_image_url) {
+      urls.push(departmentProfile.hero_image_url);
+    }
+
+    const uniqueUrls = Array.from(new Set(urls));
+
+    if (!uniqueUrls.length) {
+      return [defaultHeroImageUrl];
+    }
+
+    const activeIndex = Math.max(0, Math.min((departmentProfile.active_hero_image_index ?? 1) - 1, 2));
+    const activeUrl = departmentProfile.hero_image_urls?.[activeIndex] ?? departmentProfile.hero_image_url;
+
+    if (activeUrl && uniqueUrls.includes(activeUrl)) {
+      return [activeUrl, ...uniqueUrls.filter((url) => url !== activeUrl)];
+    }
+
+    return uniqueUrls;
+  }, [departmentProfile.active_hero_image_index, departmentProfile.hero_image_url, departmentProfile.hero_image_urls]);
+
+  const heroImageSignature = heroImageCandidates.join("|");
+
+  useEffect(() => {
+    setHeroSlideIndex(0);
+  }, [heroImageSignature]);
+
+  useEffect(() => {
+    heroImageCandidates.forEach((url) => {
+      const image = new Image();
+      image.src = url;
+    });
+
+    if (heroImageCandidates.length < 2) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      setHeroSlideIndex((current) => (current + 1) % heroImageCandidates.length);
+    }, 13000);
+
+    return () => window.clearInterval(intervalId);
+  }, [heroImageCandidates, heroImageSignature]);
+
   const greetingPhoto = greeting.photo_url;
   const greetingParagraphs = toParagraphs(departmentProfile.overview, greeting.paragraphs?.length ? greeting.paragraphs : fallbackGreeting.paragraphs);
-  const heroImageUrl = departmentProfile.hero_image_url || defaultHeroImageUrl;
+  const currentHeroIndex = heroSlideIndex % heroImageCandidates.length;
   const galleryPreviewItems = galleryItems.slice(0, 5);
   const featuredGalleryItem = galleryPreviewItems[0];
   const secondaryGalleryItems = galleryPreviewItems.slice(1, 5);
@@ -380,12 +390,19 @@ export default function HomePage() {
   return (
     <PublicShell navVariant="overlay">
       <main data-home-page className="bg-[#edf5f8]">
-        <section
-          className="home-hero relative flex min-h-[100svh] items-center overflow-hidden bg-cover bg-center px-4 pb-20 pt-28 text-white md:px-6"
-          style={{
-            backgroundImage: `linear-gradient(180deg,rgba(30,11,8,0.52),rgba(30,11,8,0.35) 44%,rgba(30,11,8,0.82)),url("${heroImageUrl}")`,
-          }}
-        >
+        <section className="home-hero relative flex min-h-[100svh] items-center overflow-hidden bg-[#153729] px-4 pb-20 pt-28 text-white md:px-6">
+          {heroImageCandidates.map((url, index) => (
+            <div
+              key={url}
+              className={`home-hero-slide absolute inset-0 bg-cover bg-center transition-[opacity,transform,filter] duration-[5200ms] ease-[cubic-bezier(0.45,0,0.15,1)] ${
+                index === currentHeroIndex ? "scale-100 opacity-100 blur-0" : "scale-[1.035] opacity-0 blur-[2px]"
+              }`}
+              style={{ backgroundImage: `url("${url}")` }}
+              aria-hidden="true"
+            />
+          ))}
+          <div key={`hero-mist-${heroSlideIndex}`} className="home-hero-transition-mist pointer-events-none absolute inset-0" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(30,11,8,0.52),rgba(30,11,8,0.35)_44%,rgba(30,11,8,0.82))]" />
           <div className="home-hero-fog absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,transparent,#edf5f8_88%)]" />
           <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center text-center">
             <p className="home-hero-kicker text-base font-bold text-white/90 md:text-lg">Selamat Datang di Website Resmi</p>
